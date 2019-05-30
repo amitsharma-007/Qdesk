@@ -18,6 +18,7 @@ router.post('/register', (req, res, next) => {
 
   User.addUser(newUser, (err, user) => {
     if(err) {
+      console.log(err);
       res.json({success: false, msg: 'Failed to register user'});
     } else {
       res.json({success: true, msg: 'User registered'});
@@ -25,39 +26,70 @@ router.post('/register', (req, res, next) => {
   });
 });
 
+
+
 // Authenticate
 router.post('/authenticate', (req, res, next) => {
-  const username = req.body.username;
-  const password = req.body.password;
-
-  User.getUserByUsername(username, (err, user) => {
+  const email = req.body.email;
+  User.getUserByEmail(email, (err, user) => {
     if(err) throw err;
     if(!user) {
       return res.json({success: false, msg: 'User not found'});
+    }else{
+      const token = jwt.sign({data: user}, config.secret, {
+        expiresIn: 604800 // 1 week
+      });
+      res.json({
+        success: true,
+        token: 'JWT '+token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          userAdminStatus:user.userAdminStatus,
+          userDepartment:user.userDepartment
+        }
+      });
     }
-
-    User.comparePassword(password, user.password, (err, isMatch) => {
-      if(err) throw err;
-      if(isMatch) {
-        const token = jwt.sign({data: user}, config.secret, {
-          expiresIn: 604800 // 1 week
-        });
-        res.json({
-          success: true,
-          token: 'JWT '+token,
-          user: {
-            id: user._id,
-            name: user.name,
-            username: user.username,
-            email: user.email
-          }
-        })
-      } else {
-        return res.json({success: false, msg: 'Wrong password'});
-      }
-    });
   });
 });
+
+
+
+
+// // Authenticate
+// router.post('/authenticate', (req, res, next) => {
+//   const username = req.body.username;
+//   const password = req.body.password;
+
+//   User.getUserByUsername(username, (err, user) => {
+//     if(err) throw err;
+//     if(!user) {
+//       return res.json({success: false, msg: 'User not found'});
+//     }
+
+//     User.comparePassword(password, user.password, (err, isMatch) => {
+//       if(err) throw err;
+//       if(isMatch) {
+//         const token = jwt.sign({data: user}, config.secret, {
+//           expiresIn: 604800 // 1 week
+//         });
+//         res.json({
+//           success: true,
+//           token: 'JWT '+token,
+//           user: {
+//             id: user._id,
+//             name: user.name,
+//             username: user.username,
+//             email: user.email
+//           }
+//         })
+//       } else {
+//         return res.json({success: false, msg: 'Wrong password'});
+//       }
+//     });
+//   });
+// });
 
 // Profile
 router.get('/profile', passport.authenticate('jwt', {session:false}), (req, res, next) => {
@@ -68,7 +100,7 @@ router.get('/profile', passport.authenticate('jwt', {session:false}), (req, res,
 
 //Get all users
 
-router.get('/getallusers', (req, res, next) => {
+router.get('/getallusers', passport.authenticate('jwt', {session:false}) , (req, res, next) => {
   
   User.find({},function(err, result){
   if(err){
@@ -84,7 +116,7 @@ router.get('/getallusers', (req, res, next) => {
 
 //Get a user by ID
 
-router.get('/getuserbyid/:id', (req, res, next) => {
+router.get('/getuserbyid/:id', passport.authenticate('jwt', {session:false}) , (req, res, next) => {
   
   User.findOne({_id:req.params.id}).exec(function(err, result){
   if(err){
@@ -100,7 +132,7 @@ router.get('/getuserbyid/:id', (req, res, next) => {
 
 
 //Update user
-router.post('/edit/:id', (req, res, next) => {
+router.post('/edit/:id', passport.authenticate('jwt', {session:false}) , (req, res, next) => {
   
     User.findOneAndUpdate({_id: req.params.id},{"$set":{
       name: req.body.name,
@@ -120,8 +152,9 @@ router.post('/edit/:id', (req, res, next) => {
 });
 
 
+
 //Delete User
-router.delete('/delete/:id', (req, res, next) => {
+router.delete('/delete/:id', passport.authenticate('jwt', {session:false}) , (req, res, next) => {
   
   User.findByIdAndRemove({_id: req.params.id},function(err, deleted){
   if(err){

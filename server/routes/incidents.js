@@ -9,7 +9,7 @@ const _ = require('lodash');
 const nodemailer = require("nodemailer");
 
 // Add an incident
-router.post('/add', (req, res, next) => {
+router.post('/add', passport.authenticate('jwt', {session:false}) , (req, res, next) => {
   let newIncident = new Incident ({
     submittedBy: req.body.submittedBy,
     submittedTo: req.body.submittedTo,
@@ -29,7 +29,7 @@ router.post('/add', (req, res, next) => {
 });
 
 //Get all incidents
-router.get('/getallincidents', (req, res, next) => {
+router.get('/getallincidents', passport.authenticate('jwt', {session:false}) , (req, res, next) => {
   Incident.find({},function(err, result){
   if(err){
     console.log(err);
@@ -42,46 +42,43 @@ router.get('/getallincidents', (req, res, next) => {
 
 
 //Get all incidents by submittedBy
-router.post('/getincidentsbysubmittedby', (req, res, next) => {
-    Incident.find({'submittedBy':req.body.submittedBy},function(err, result){
-    if(err){
-      console.log(err);
-      res.json(err);
-    }else{
-      res.json(result);
-    }
-  });
-  });
+router.post('/getincidentsbysubmittedby', passport.authenticate('jwt', {session:false}) , (req, res, next) => {
+  Incident.find({'submittedBy':req.body.submittedBy},function(err, result){
+  if(err){
+    console.log(err);
+    res.json(err);
+  }else{
+    res.json(result);
+  }
+});
+});
+
+//Get all incidents by submittedTo
+router.post('/getincidentsbysubmittedto', passport.authenticate('jwt', {session:false}) , (req, res, next) => {
+  Incident.find({'submittedTo':req.body.submittedTo},function(err, result){
+  if(err){
+    console.log(err);
+    res.json(err);
+  }else{
+    res.json(result);
+  }
+});
+});
 
 //Get all incidents by assignedTo
-router.post('/getincidentsbysubmittedto', (req, res, next) => {
-    Incident.find({'submittedTo':req.body.submittedTo},function(err, result){
-    if(err){
-      console.log(err);
-      res.json(err);
-    }else{
-      res.json(result);
-    }
-  });
-  });
-
-//Get all incidents by assignedTo
-router.post('/getincidentsbyassignedto', (req, res, next) => {
-    Incident.find({'assignedTo':req.body.assignedTo},function(err, result){
-    if(err){
-      console.log(err);
-      res.json(err);
-    }else{
-      res.json(result);
-    }
-  });
-  });
-
-
-
+router.post('/getincidentsbyassignedto', passport.authenticate('jwt', {session:false}) , (req, res, next) => {
+  Incident.find({'assignedTo':req.body.assignedTo},function(err, result){
+  if(err){
+    console.log(err);
+    res.json(err);
+  }else{
+    res.json(result);
+  }
+});
+});
 
 //Get an incident
-router.get('/getincidentbyid/:id', (req, res, next) => {
+router.get('/getincidentbyid/:id', passport.authenticate('jwt', {session:false}) , (req, res, next) => {
   Incident.findOne({_id:req.params.id}).exec(function(err, result){
   if(err){
     console.log(err);
@@ -93,7 +90,7 @@ router.get('/getincidentbyid/:id', (req, res, next) => {
 });
 
 //Create Comment
-router.post('/createcomment/:id', (req, res, next) => {
+router.post('/createcomment/:id', passport.authenticate('jwt', {session:false}) , (req, res, next) => {
   Incident.findOneAndUpdate({_id: req.params.id},{ $push: {
     comments:req.body
   }}).then(doc => {
@@ -105,7 +102,7 @@ router.post('/createcomment/:id', (req, res, next) => {
 });
 
 //Update Incident
-router.post('/edit/:id', (req, res, next) => {
+router.post('/edit/:id', passport.authenticate('jwt', {session:false}) , (req, res, next) => {
     Incident.findOneAndUpdate({_id: req.params.id},{"$set":{
         submittedBy:req.body.submittedBy,
         submittedTo :req.body.submittedTo,
@@ -126,7 +123,7 @@ router.post('/edit/:id', (req, res, next) => {
 });
 
 //Delete Incident
-router.delete('/delete/:id', (req, res, next) => {
+router.delete('/delete/:id', passport.authenticate('jwt', {session:false}) , (req, res, next) => {
   Incident.findByIdAndRemove({_id: req.params.id},function(err, deleted){
   if(err){
     console.log(err);
@@ -138,3 +135,7 @@ router.delete('/delete/:id', (req, res, next) => {
 });
 
 module.exports = router;
+
+
+
+
